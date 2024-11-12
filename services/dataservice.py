@@ -45,21 +45,18 @@ class DataService:
             return receipt_details, True, None
         else:
             return None, False, "Seller address does not have an associated contract"
-
     def get_receipts_for_seller(self,seller_address):
         all_seller_receipts = self.receipt_Dynamo_DB.search_by_seller_address(seller_address)
         if isinstance(all_seller_receipts,list):
             return all_seller_receipts, True
         else:
             return [], False
-
     def get_receipts_for_buyer(self,buyer_address):
         all_buyer_receipts = self.receipt_Dynamo_DB.search_by_buyer_address(buyer_address)
         if isinstance(all_buyer_receipts,list):
             return all_buyer_receipts, True
         else:
             return [], False
-
     def request_return(self, transaction_hash):
         # all_sellers = self.get_sellers_with_contracts()
         receipt_details = self.receipt_Dynamo_DB.get_receipt_details(transaction_hash)
@@ -74,7 +71,6 @@ class DataService:
                 return None, False, return_request_details['reason']
         else:
             return None, False, "Seller address does not have an associated contract"
-
     def funds_release(self, transaction_hash):
         # all_sellers = self.get_sellers_with_contracts()
         receipt_details = self.receipt_Dynamo_DB.get_receipt_details(transaction_hash)
