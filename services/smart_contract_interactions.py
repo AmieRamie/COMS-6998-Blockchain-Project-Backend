@@ -107,6 +107,7 @@ class ReceiptsContractInterface:
                 "status": "Failed",
                 "reason": str(error_message)
             }
+
     def deploy_new_contract(self,seller_account,return_window_days):
         """Deploy a new instance of the ReceiptManager contract and return the address."""
         ReceiptManager = self.web3.eth.contract(abi=self.contract_abi, bytecode=self.contract_bytecode)

@@ -40,6 +40,7 @@ class DataService:
             contract_address = self.all_sellers[seller_address]['seller_contract_address']
             receipt_details = self.receipt_smart_contract_interface.issue_receipt(contract_address,seller_address, buyer_address, amount_eth)
             receipt_details['item_name'] = item_name
+            receipt_details['status'] = 'Active'
             self.receipt_Dynamo_DB.insert_receipt(receipt_details)
             return receipt_details, True, None
         else:
@@ -59,25 +60,29 @@ class DataService:
         else:
             return [], False
 
-    def request_return(self, seller_address, buyer_address, receipt_index):
+    def request_return(self, transaction_hash):
         # all_sellers = self.get_sellers_with_contracts()
-        if seller_address in self.all_sellers.keys():
-            contract_address = self.all_sellers[seller_address]['seller_contract_address']
-            return_request_details = self.receipt_smart_contract_interface.request_return(contract_address, buyer_address, receipt_index)
+        receipt_details = self.receipt_Dynamo_DB.get_receipt_details(transaction_hash)
+        print(receipt_details)
+        if receipt_details['seller_address'] in self.all_sellers.keys():
+            return_request_details = self.receipt_smart_contract_interface.request_return(receipt_details['contract_address'], receipt_details['buyer_address'], receipt_details['receipt_index'])
             print("return_request_details:",return_request_details)
             if return_request_details['status'] == 'Success':
+                self.receipt_Dynamo_DB.change_receipt_status(transaction_hash,'Returned','return_time')
                 return return_request_details, True, None
             else:
                 return None, False, return_request_details['reason']
         else:
             return None, False, "Seller address does not have an associated contract"
 
-    def release_return(self, seller_address, buyer_address, receipt_index):
+    def funds_release(self, transaction_hash):
         # all_sellers = self.get_sellers_with_contracts()
-        if seller_address in self.all_sellers.keys():
-            contract_address = self.all_sellers[seller_address]['seller_contract_address']
-            release_return_details = self.receipt_smart_contract_interface.release_funds(contract_address, buyer_address, receipt_index,seller_address)
+        receipt_details = self.receipt_Dynamo_DB.get_receipt_details(transaction_hash)
+        print(receipt_details)
+        if receipt_details['seller_address'] in self.all_sellers.keys():
+            release_return_details = self.receipt_smart_contract_interface.release_funds(receipt_details['contract_address'], receipt_details['buyer_address'], receipt_details['receipt_index'],receipt_details['seller_address'])
             if release_return_details['status'] == 'Success':
+                self.receipt_Dynamo_DB.change_receipt_status(transaction_hash,'Funds Released to Seller','funds_release_time')
                 return release_return_details, True, None
             else:
                 return None, False, release_return_details['reason']

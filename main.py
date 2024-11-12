@@ -100,7 +100,7 @@ async def get_buyer_receipts(params:get_buyer_receipts_model):
 async def request_return(params:request_return_model):
     try:
         request_return_json = params.dict()
-        return_request_details, success, error_message = ds.request_return(request_return_json['seller_address'],request_return_json['buyer_address'],request_return_json['receipt_index'])
+        return_request_details, success, error_message = ds.request_return(request_return_json['transaction_hash'])
         print(return_request_details, success, error_message)
         if success:
             return {'success':success,'return_request_details':make_json_serializable(return_request_details)}
@@ -110,11 +110,11 @@ async def request_return(params:request_return_model):
         print('For some reason the exception is firing', e)
         raise HTTPException(status_code=500, detail=str(e))
 
-@app.post("/release_return")
-async def release_return(params:release_return_model):
+@app.post("/release_funds")
+async def release_funds(params:release_return_model):
     try:
         release_return_json = params.dict()
-        release_return_details, success, error_message = ds.release_return(release_return_json['seller_address'],release_return_json['buyer_address'],release_return_json['receipt_index'])
+        release_return_details, success, error_message = ds.funds_release(release_return_json['transaction_hash'])
         print(release_return_details, success, error_message)
         if success:
             return {'success':success,'release_return_details':make_json_serializable(release_return_details)}

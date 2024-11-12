@@ -163,6 +163,49 @@ class ReceiptDyanmoDB:
         except ClientError as e:
             print(f"Failed to search receipts: {e.response['Error']['Message']}")
             return None
+        
+    def get_receipt_details(self, transaction_hash):
+        """
+        Retrieves contract_address, buyer_address, seller_address, and receipt_index for a given transaction_hash.
+        """
+        try:
+            response = self.table.get_item(Key={'transaction_hash': transaction_hash})
+            item = response.get('Item')
+            
+            if not item:
+                print("No item found with the given transaction hash.")
+                return None
+            
+            # Extract the required fields
+            receipt_details = {
+                'contract_address': item.get('seller_contract_address'),
+                'buyer_address': item.get('buyer_address'),
+                'seller_address': item.get('seller_address'),
+                'receipt_index': int(item.get('receipt_index'))
+            }
+            return receipt_details
+        except ClientError as e:
+            print(f"Error retrieving receipt details: {e.response['Error']['Message']}")
+            return None
+        
+    def change_receipt_status(self, transaction_hash,status,time_key):
+        """
+        Updates the receipt to mark funds as released.
+        Adds or updates a 'status' attribute to 'FundsReleased'.
+        """
+        try:
+            response = self.table.update_item(
+                Key={'transaction_hash': transaction_hash},
+                UpdateExpression=f"SET #status = :status, {time_key} = :release_time",
+                ExpressionAttributeNames={'#status': 'status'},
+                ExpressionAttributeValues={
+                    ':status': status,
+                    ':release_time': Decimal(datetime.timestamp(datetime.now()))  # Storing current timestamp
+                }
+            )
+            print("Marked as funds released:", response)
+        except ClientError as e:
+            print(f"Error marking funds released: {e.response['Error']['Message']}")
 
     def get_all_transactions(self,max_number_of_pages = 5):
         """Retrieves all transactions from the DynamoDB table."""

@@ -18,11 +18,10 @@ class get_buyer_receipts_model(BaseModel):
     buyer_address:str
 
 class request_return_model(BaseModel):
-    seller_address:str
-    buyer_address:str
-    receipt_index:int
+    # seller_address:str
+    # buyer_address:str
+    # receipt_index:int
+    transaction_hash:str
 
 class release_return_model(BaseModel):
-    seller_address:str
-    buyer_address:str
-    receipt_index:int
+    transaction_hash:str
