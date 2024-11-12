@@ -14,6 +14,7 @@ class DataService:
         self.seller_Dynamo_DB = SellersDyanmoDB()
         self.receipt_Dynamo_DB = ReceiptDyanmoDB()
         self.receipt_smart_contract_interface = ReceiptsContractInterface("http://127.0.0.1:8545")
+        self.all_sellers = self.get_sellers_with_contracts()
     def get_all_network_accounts(self):
         all_accounts = self.receipt_smart_contract_interface.get_all_accounts_on_ganache()
         all_accounts_enriched = [{'account_index':i,'account_address':account,'balance':self.get_account_balance(account)} for i,account in enumerate(all_accounts)]
@@ -29,13 +30,14 @@ class DataService:
         if seller_exists==False:
             contract_address = self.receipt_smart_contract_interface.deploy_new_contract(account_address,return_window_days)
             self.seller_Dynamo_DB.insert_seller({'seller_address':account_address,'seller_contract_address':contract_address,'return_window_days':return_window_days})
+            self.all_sellers[account_address] = {'seller_address':account_address,'seller_contract_address':contract_address,'return_window_days':return_window_days}
             return contract_address, True
         else:
             return None, False
     def issue_receipt(self, seller_address, buyer_address, amount_eth, item_name):
-        all_sellers = self.get_sellers_with_contracts()
-        if seller_address in all_sellers.keys():
-            contract_address = all_sellers[seller_address]['seller_contract_address']
+        # all_sellers = self.get_sellers_with_contracts()
+        if seller_address in self.all_sellers.keys():
+            contract_address = self.all_sellers[seller_address]['seller_contract_address']
             receipt_details = self.receipt_smart_contract_interface.issue_receipt(contract_address,seller_address, buyer_address, amount_eth)
             receipt_details['item_name'] = item_name
             self.receipt_Dynamo_DB.insert_receipt(receipt_details)
@@ -58,9 +60,9 @@ class DataService:
             return [], False
 
     def request_return(self, seller_address, buyer_address, receipt_index):
-        all_sellers = self.get_sellers_with_contracts()
-        if seller_address in all_sellers.keys():
-            contract_address = all_sellers[seller_address]['seller_contract_address']
+        # all_sellers = self.get_sellers_with_contracts()
+        if seller_address in self.all_sellers.keys():
+            contract_address = self.all_sellers[seller_address]['seller_contract_address']
             return_request_details = self.receipt_smart_contract_interface.request_return(contract_address, buyer_address, receipt_index)
             print("return_request_details:",return_request_details)
             if return_request_details['status'] == 'Success':
@@ -71,9 +73,9 @@ class DataService:
             return None, False, "Seller address does not have an associated contract"
 
     def release_return(self, seller_address, buyer_address, receipt_index):
-        all_sellers = self.get_sellers_with_contracts()
-        if seller_address in all_sellers.keys():
-            contract_address = all_sellers[seller_address]['seller_contract_address']
+        # all_sellers = self.get_sellers_with_contracts()
+        if seller_address in self.all_sellers.keys():
+            contract_address = self.all_sellers[seller_address]['seller_contract_address']
             release_return_details = self.receipt_smart_contract_interface.release_funds(contract_address, buyer_address, receipt_index,seller_address)
             if release_return_details['status'] == 'Success':
                 return release_return_details, True, None
