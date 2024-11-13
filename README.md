@@ -51,6 +51,8 @@ Start the server:
 python main.py
 ```
 
+Check out the OpenAPI documentation [here](https://w6998-backend-745799261495.us-east4.run.app/docs).
+
 
 ## Testing
 
