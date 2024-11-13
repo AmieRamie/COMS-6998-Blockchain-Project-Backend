@@ -22,6 +22,8 @@ Compile the smart contracts:
 truffle compile
 ```
 
+After compiling successfully, you should see that `build/contracts` directory is created with the compiled smart contract `ReceiptManager.json`.
+
 
 Start the local blockchain network using Ganache:
 
@@ -34,7 +36,14 @@ By default, Ganache will run on `127.0.0.1:8545` because this is how we defined 
 
 ## Usage
 
-Run `pip install -r requirements.txt` to install the required packages.
+Run `ganache` to start the local blockchain network.
+
+We are using AWS DynamoDB to store the seller information. The following environment variables need to be set before running the server:
+
+```shell
+export blockchain_class_access_key=<your aws access key>
+export blockchain_class_secret_key=<your aws secret access key>
+```
 
 Start the server:
 
