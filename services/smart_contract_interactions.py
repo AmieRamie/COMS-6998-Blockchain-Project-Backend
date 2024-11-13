@@ -23,7 +23,7 @@ class ReceiptsContractInterface:
         
         # Send the transaction to the contract's issueReceipt function
         tx_hash = seller_contract.functions.issueReceipt(buyer_address).transact({
-            'from': seller_address,  # Pass in the seller's address from the API
+            'from': buyer_address,  # Pass in the seller's address from the API
             'value': amount_wei  # The amount to hold in escrow
         })
         

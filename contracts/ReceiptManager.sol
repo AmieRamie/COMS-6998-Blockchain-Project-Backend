@@ -30,7 +30,7 @@ contract ReceiptManager {
     }
 
     // Function to issue the receipt and hold funds in escrow for a specific buyer
-    function issueReceipt(address _buyer) public payable onlySeller returns (uint256) {
+    function issueReceipt(address _buyer) public payable returns (uint256) {
         require(msg.value > 0, "No funds sent");
 
         // Create a new receipt and store it in the buyer's list
