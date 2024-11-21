@@ -6,9 +6,22 @@ from hexbytes import HexBytes
 from typing import Any
 from services.dataservice import DataService
 from services.models import create_seller_contract, issue_receipt_model, get_seller_receipts_model,get_buyer_receipts_model, request_return_model, release_return_model
+from fastapi.middleware.cors import CORSMiddleware
 
 ds = DataService()
 app = FastAPI()
+
+origins = [
+    "*"
+]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 def make_json_serializable(data):
     if isinstance(data, AttributeDict):
@@ -124,6 +137,10 @@ async def release_funds(params:release_return_model):
         print('For some reason the exception is firing', e)
         raise HTTPException(status_code=500, detail=str(e))
     
+@app.get("/test") 
+async def test():
+    return {"test":True,"test2":1,"test3":"hello world"}
+
 
     
 if __name__ == "__main__":
