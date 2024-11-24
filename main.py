@@ -5,8 +5,9 @@ from web3.datastructures import AttributeDict
 from hexbytes import HexBytes
 from typing import Any
 from services.dataservice import DataService
-from services.models import create_seller_contract, issue_receipt_model, get_seller_receipts_model,get_buyer_receipts_model, request_return_model, release_return_model
+from services.models import create_seller_contract, issue_receipt_model, get_seller_receipts_model,get_buyer_receipts_model, request_return_model, release_return_model,credentials
 from fastapi.middleware.cors import CORSMiddleware
+import json
 
 ds = DataService()
 app = FastAPI()
@@ -45,7 +46,7 @@ async def reset_tables():
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
     
-@app.get("/get_all_accounts_in_network")
+@app.get("/get_all_accounts_in_network") #
 async def get_all_accounts_in_network():
     try:
         all_accounts = ds.get_all_network_accounts()
@@ -123,7 +124,7 @@ async def request_return(params:request_return_model):
         print('For some reason the exception is firing', e)
         raise HTTPException(status_code=500, detail=str(e))
 
-@app.post("/release_funds")
+@app.post("/release_funds") #wait for return window to pass then seller can get money
 async def release_funds(params:release_return_model):
     try:
         release_return_json = params.dict()
@@ -136,10 +137,56 @@ async def release_funds(params:release_return_model):
     except Exception as e:
         print('For some reason the exception is firing', e)
         raise HTTPException(status_code=500, detail=str(e))
-    
-@app.get("/test") 
-async def test():
-    return {"test":True,"test2":1,"test3":"hello world"}
+
+@app.post("/verify_login") 
+async def verify_login(params:credentials):
+    try:
+        credentials_return_json = params.dict()
+        username=credentials_return_json["username"]
+        password=credentials_return_json["password"]
+        res=False
+        with open('data.json', 'r') as file:
+            data = json.load(file)
+            if username in data and data[username][0]==password: #check if username and password match with what is in database
+                res=True
+        return {"data":res}
+    except Exception as e:
+        print('For some reason the exception is firing', e)
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/create_new_user") 
+async def create_new_user(params:credentials):
+    try:
+        credentials_return_json = params.dict()
+        username=credentials_return_json["username"]
+        password=credentials_return_json["password"]
+        res=True
+        used_addresses=set()
+        with open('data.json', 'r') as file:
+            data = json.load(file)
+            for used_username in data: #go through users in database
+                if used_username==username: #if user already exists, return False
+                    res=False
+                used_addresses.add(data[used_username][1]) #keep track of used addresses
+        all_accounts = ds.get_all_network_accounts()
+        if len(all_accounts)==len(used_addresses): #if all addresses are already used, return false
+            res=False
+        else:
+            for account_data in all_accounts: 
+                address=account_data["account_address"]
+                if address not in used_addresses: #find not used address
+                    with open('data.json', 'w') as file:
+                        data[username]=[password,address] #add user data to database
+                        json.dump(data, file)
+        
+        return {"data":res}
+    except Exception as e:
+        print('For some reason the exception is firing', e)
+        raise HTTPException(status_code=500, detail=str(e))
+  
+
+
+
 
 
     

@@ -25,3 +25,7 @@ class request_return_model(BaseModel):
 
 class release_return_model(BaseModel):
     transaction_hash:str
+
+class credentials(BaseModel):
+    username:str
+    password:str
