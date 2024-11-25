@@ -44,6 +44,8 @@ async def reset_tables():
     try:
         ds.clear_tables()
         response = ds.restart_ganache()
+        with open('data.json', 'w') as json_file:
+            json.dump({}, json_file, indent=4)
         return response
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
