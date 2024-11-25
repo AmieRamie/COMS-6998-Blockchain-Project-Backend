@@ -8,6 +8,7 @@ from services.dataservice import DataService
 from services.models import create_seller_contract, issue_receipt_model, get_seller_receipts_model,get_buyer_receipts_model, request_return_model, release_return_model,credentials
 from fastapi.middleware.cors import CORSMiddleware
 import json
+import requests
 
 ds = DataService()
 app = FastAPI()
@@ -168,7 +169,10 @@ async def create_new_user(params:credentials):
                 if used_username==username: #if user already exists, return False
                     res=False
                 used_addresses.add(data[used_username][1]) #keep track of used addresses
-        all_accounts = ds.get_all_network_accounts()
+        all_accounts = requests.get("https://w6998-backend-745799261495.us-east4.run.app/get_all_accounts_in_network")
+        all_accounts=json.loads(all_accounts.text)
+        #print(all_accounts,used_addresses)
+        all_accounts=all_accounts["all_accounts"]
         if len(all_accounts)==len(used_addresses): #if all addresses are already used, return false
             res=False
         else:
@@ -178,12 +182,24 @@ async def create_new_user(params:credentials):
                     with open('data.json', 'w') as file:
                         data[username]=[password,address] #add user data to database
                         json.dump(data, file)
-        
+                        post_data={"return_window_days":0,"seller_account_address":address}
+                        r = requests.post('https://w6998-backend-745799261495.us-east4.run.app/create_seller_contract', json = post_data) #create new seller contract by calling other api endpoint
+                        break
         return {"data":res}
     except Exception as e:
         print('For some reason the exception is firing', e)
         raise HTTPException(status_code=500, detail=str(e))
-  
+
+
+@app.get("/get_user_data")
+async def get_user_data():
+    try:
+        with open('data.json', 'r') as file:
+            data = json.load(file)
+            return data
+    except Exception as e:
+        print('For some reason the exception is firing', e)
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 
