@@ -43,7 +43,8 @@ def make_json_serializable(data):
 async def reset_tables():
     try:
         ds.clear_tables()
-        return {'success':True}
+        response = ds.restart_ganache()
+        return response
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
     

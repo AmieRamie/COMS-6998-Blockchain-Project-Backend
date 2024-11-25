@@ -8,6 +8,21 @@ from decimal import Decimal
 import os 
 from services.dynamoDB_service import ReceiptDyanmoDB,SellersDyanmoDB
 from services.smart_contract_interactions import ReceiptsContractInterface
+import subprocess
+import time
+
+def find_and_kill_process(port):
+    """Find and kill the process running on a specific port."""
+    try:
+        # Find the process using the specified port
+        result = subprocess.check_output(f"lsof -i :{port} | grep LISTEN", shell=True).decode("utf-8")
+        # Extract the PID (Process ID)
+        pid = int(result.split()[1])
+        # Kill the process
+        os.kill(pid, 9)
+        print(f"Stopped process with PID {pid} running on port {port}.")
+    except subprocess.CalledProcessError:
+        print(f"No process found running on port {port}.")
 
 class DataService:
     def __init__(self):
@@ -90,3 +105,18 @@ class DataService:
     def clear_tables(self):
         self.seller_Dynamo_DB.clear_table()
         self.receipt_Dynamo_DB.clear_table()
+    def restart_ganache(self,port=8545):
+        try:
+            find_and_kill_process(port)
+            # Wait for a moment to ensure the port is freed
+            time.sleep(2)
+
+            # Start a new Ganache instance on the specified port
+            subprocess.Popen(
+                ["ganache-cli", "--port", str(port), "--deterministic", "--accounts", "10", "--defaultBalanceEther", "10000"],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+            )
+            return {"success":True, "message":"Ganache restarted with fresh accounts"}
+        except Exception as e:
+            return {"success":False, "message":str(e)}
