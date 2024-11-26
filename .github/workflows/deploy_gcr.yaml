@@ -49,7 +49,7 @@ jobs:
           gcloud run deploy ${{ env.CR_SERVICE_NAME }} \
             --image "${{ env.GAR_LOCATION }}" \
             --region ${{ env.REGION }} \
-            --min-instances 0 \
+            --min-instances 1 \
             --allow-unauthenticated \
             --env-vars-file secrets.yaml \
             --port=8010
