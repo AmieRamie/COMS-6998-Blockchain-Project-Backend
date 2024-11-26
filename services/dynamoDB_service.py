@@ -286,3 +286,108 @@ class ReceiptDyanmoDB:
             print("Receipts table cleared successfully.")
         except ClientError as e:
             print(f"Error clearing Receipts table: {e.response['Error']['Message']}")
+
+class AccountsDynamoDB:
+    def __init__(self, table_name='Accounts'):
+        self.dynamodb = boto3.resource(
+            'dynamodb',
+            region_name='us-east-2',
+            aws_access_key_id=os.getenv('blockchain_class_access_key'),
+            aws_secret_access_key=os.getenv('blockchain_class_secret_key')
+        )
+        self.table = self.dynamodb.Table(table_name)
+
+    def insert_account(self, accounts_data):
+        try:
+            response = self.table.put_item(
+                Item=accounts_data,
+                ConditionExpression="attribute_not_exists(user_id)"
+            )
+            print("Account address inserted successfully:", response)
+            return True,f"Account address inserted successfully"
+        except ClientError as e:
+            if e.response['Error']['Code'] == 'ConditionalCheckFailedException':
+                print("Account already exists.")
+                return False,f"Account already exists."
+            else:
+                return False,f"Error creating account: {e.response['Error']['Message']}"
+    def account_exists(self, user_id):
+        """
+        Checks if a seller exists in the table.
+        Returns True if the seller exists, False otherwise.
+        """
+        try:
+            response = self.table.get_item(Key={'user_id': user_id})
+            print(response)
+            item = response.get('Item', {})
+            if len(list(item.keys()))==0:
+                return []
+            else:
+                return [item]
+        except ClientError as e:
+            print("Error checking seller existence:", e.response['Error']['Message'])
+            return {}
+    def address_used(self, address):
+        """Searches receipts by buyer address with optional filtering and sorting."""
+        return self._search_by_attribute('account_address', address)      
+    def get_all_accounts(self):
+        """
+        Retrieves all sellers with their associated contract addresses.
+        Returns a list of dictionaries, each containing 'seller_address' and 'seller_contract_address'.
+        """
+        try:
+            accounts = []
+            response = self.table.scan(
+                ProjectionExpression="user_id, account_address"
+            )
+            
+            # Append the first batch of items
+            accounts.extend(response.get('Items', []))
+            
+            # Continue fetching if there are more items (pagination)
+            while 'LastEvaluatedKey' in response:
+                response = self.table.scan(
+                    ProjectionExpression="user_id, account_address",
+                    ExclusiveStartKey=response['LastEvaluatedKey']
+                )
+                accounts.extend(response.get('Items', []))
+                
+            print(f"Retrieved {len(accounts)} accounts.")
+            return accounts
+        except ClientError as e:
+            print(f"Error retrieving accounts: {e.response['Error']['Message']}")
+            return []
+    def _search_by_attribute(self, attribute, value):
+        """Internal method to search by a specific attribute (buyer or seller) with filtering and sorting."""
+        try:
+            # Query using the specified attribute
+            response = self.table.scan(
+                FilterExpression=boto3.dynamodb.conditions.Attr(attribute).eq(value)
+            )
+            items = response.get('Items', [])        
+            return items
+        except ClientError as e:
+            print(f"Failed to search receipts: {e.response['Error']['Message']}")
+            return []
+    
+    def clear_table(self):
+        """Clears all items from the Accounts table."""
+        try:
+            response = self.table.scan()
+            items = response.get('Items', [])
+            
+            with self.table.batch_writer() as batch:
+                for item in items:
+                    batch.delete_item(Key={'user_id': item['user_id']})
+            
+            # Paginate if there are more items
+            while 'LastEvaluatedKey' in response:
+                response = self.table.scan(ExclusiveStartKey=response['LastEvaluatedKey'])
+                items = response.get('Items', [])
+                with self.table.batch_writer() as batch:
+                    for item in items:
+                        batch.delete_item(Key={'user_id': item['user_id']})
+
+            print("Accounts table cleared successfully.")
+        except ClientError as e:
+            print(f"Error clearing Accounts table: {e.response['Error']['Message']}")

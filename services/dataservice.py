@@ -6,7 +6,7 @@ import boto3
 from botocore.exceptions import ClientError
 from decimal import Decimal
 import os 
-from services.dynamoDB_service import ReceiptDyanmoDB,SellersDyanmoDB
+from services.dynamoDB_service import ReceiptDyanmoDB,SellersDyanmoDB, AccountsDynamoDB
 from services.smart_contract_interactions import ReceiptsContractInterface
 import subprocess
 import time
@@ -28,6 +28,7 @@ class DataService:
     def __init__(self):
         self.seller_Dynamo_DB = SellersDyanmoDB()
         self.receipt_Dynamo_DB = ReceiptDyanmoDB()
+        self.accounts_Dynamo_DB = AccountsDynamoDB()
         self.receipt_smart_contract_interface = ReceiptsContractInterface("http://127.0.0.1:8545")
         self.all_sellers = self.get_sellers_with_contracts()
     def get_all_network_accounts(self):
@@ -100,11 +101,37 @@ class DataService:
         else:
             return None, False, "Seller address does not have an associated contract"
 
-        
+    def create_new_user(self, username, pwd):
+        all_network_accounts = self.get_all_network_accounts()
+        all_network_addresses = [account['account_address'] for account in all_network_accounts]
+        found_address = False
+        for network_address in all_network_addresses:
+            response = self.accounts_Dynamo_DB.address_used(network_address)
+            if len(response)==0:
+                found_address = True
+                break
+        if found_address==False:
+            return {"success":False,"message":"All 10 account addresses in Ganache network have been taken"}
+        success, message = self.accounts_Dynamo_DB.insert_account({'user_id':username,'account_address':network_address,'password':pwd})
+        return {"success":success,"message":message}
+    def verify_login(self,username,pwd):
+        accounts = self.accounts_Dynamo_DB.account_exists(username)
+        if len(accounts)==0:
+            return {"success":False,"message":"Account doesn't exist"}
+        account = accounts[0]
+        if account['password'] == pwd:
+            return {"success":True,"message":"Password is right"}
+        else:
+            return {"success":False,"message":"Password is wrong"}
+
+    def get_all_accounts(self):
+        all_accounts = self.accounts_Dynamo_DB.get_all_accounts()
+        return all_accounts
     
     def clear_tables(self):
         self.seller_Dynamo_DB.clear_table()
         self.receipt_Dynamo_DB.clear_table()
+        self.accounts_Dynamo_DB.clear_table()
     def restart_ganache(self,port=8545):
         try:
             find_and_kill_process(port)
