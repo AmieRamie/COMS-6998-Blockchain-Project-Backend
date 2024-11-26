@@ -169,21 +169,22 @@ async def create_new_user(params:credentials):
                 if used_username==username: #if user already exists, return False
                     res=False
                 used_addresses.add(data[used_username][1]) #keep track of used addresses
-        all_accounts = requests.get("https://w6998-backend-745799261495.us-east4.run.app/get_all_accounts_in_network")
-        all_accounts=json.loads(all_accounts.text)
-        #print(all_accounts,used_addresses)
-        all_accounts=all_accounts["all_accounts"]
+
+        all_accounts=ds.get_all_network_accounts()
+
         if len(all_accounts)==len(used_addresses): #if all addresses are already used, return false
             res=False
-        else:
+        if res:
             for account_data in all_accounts: 
                 address=account_data["account_address"]
                 if address not in used_addresses: #find not used address
                     with open('data.json', 'w') as file:
                         data[username]=[password,address] #add user data to database
                         json.dump(data, file)
-                        post_data={"return_window_days":0,"seller_account_address":address}
-                        r = requests.post('https://w6998-backend-745799261495.us-east4.run.app/create_seller_contract', json = post_data) #create new seller contract by calling other api endpoint
+                        create_seller_contract_json={"return_window_days":0,"seller_account_address":address}
+                        contract_address,success = ds.create_seller_account_contract(create_seller_contract_json['seller_account_address'],create_seller_contract_json['return_window_days'])
+                        if not success:
+                            res=False
                         break
         return {"data":res}
     except Exception as e:
