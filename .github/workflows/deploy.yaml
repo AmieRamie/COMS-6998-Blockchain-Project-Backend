@@ -51,7 +51,8 @@ jobs:
             --region ${{ env.REGION }} \
             --min-instances 0 \
             --allow-unauthenticated \
-            --env-vars-file secrets.yaml
+            --env-vars-file secrets.yaml \
+            --port=8010
 
       - name: "Clean Up"
         run: rm secrets.yaml

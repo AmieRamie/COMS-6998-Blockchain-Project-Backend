@@ -1,10 +1,6 @@
 # base image: https://hub.docker.com/r/nikolaik/python-nodejs
 FROM nikolaik/python-nodejs:python3.12-nodejs18-slim
 
-# set environment variables
-ENV blockchain_class_secret_key=
-ENV blockchain_class_access_key=
-
 # Install build dependencies
 RUN apt-get update && \
     apt-get install --no-install-recommends -y \
@@ -28,6 +24,8 @@ COPY truffle-config.js /app/
 COPY contracts /app/contracts/
 COPY migrations /app/migrations/
 # COPY test /app/test/
+
+COPY data.json /app/
 
 # compile the smart contracts
 RUN truffle compile
