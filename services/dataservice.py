@@ -126,7 +126,7 @@ class DataService:
             return {"success":False,"message":"Account doesn't exist"}
         account = accounts[0]
         if account['password'] == pwd:
-            return {"success":True,"message":"Password is right"}
+            return {"success":True,"message":account["account_address"]}
         else:
             return {"success":False,"message":"Password is wrong"}
 
