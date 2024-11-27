@@ -29,3 +29,8 @@ class release_return_model(BaseModel):
 class credentials(BaseModel):
     username:str
     password:str
+
+class new_user_data(BaseModel):
+    username:str
+    password:str
+    returnWindow:int

@@ -101,7 +101,7 @@ class DataService:
         else:
             return None, False, "Seller address does not have an associated contract"
 
-    def create_new_user(self, username, pwd):
+    def create_new_user(self, username, pwd,return_window):
         all_network_accounts = self.get_all_network_accounts()
         all_network_addresses = [account['account_address'] for account in all_network_accounts]
         found_address = False
@@ -113,7 +113,11 @@ class DataService:
         if found_address==False:
             return {"success":False,"message":"All 10 account addresses in Ganache network have been taken"}
         success, message = self.accounts_Dynamo_DB.insert_account({'user_id':username,'account_address':network_address,'password':pwd})
-        return {"success":success,"message":message}
+        if not success:
+            res={"success":success,"message":message}
+            return res
+        contract,success=self.create_seller_account_contract(network_address,return_window)
+        return {"success":success,"message":message+" Contract: "+contract}
     def verify_login(self,username,pwd):
         accounts = self.accounts_Dynamo_DB.account_exists(username)
         if len(accounts)==0:

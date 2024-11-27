@@ -5,7 +5,7 @@ from web3.datastructures import AttributeDict
 from hexbytes import HexBytes
 from typing import Any
 from services.dataservice import DataService
-from services.models import create_seller_contract, issue_receipt_model, get_seller_receipts_model,get_buyer_receipts_model, request_return_model, release_return_model,credentials
+from services.models import create_seller_contract, issue_receipt_model, get_seller_receipts_model,get_buyer_receipts_model, request_return_model, release_return_model,credentials,new_user_data
 from fastapi.middleware.cors import CORSMiddleware
 import json
 import requests
@@ -155,13 +155,15 @@ async def verify_login(params:credentials):
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.post("/create_new_user") 
-async def create_new_user(params:credentials):
+async def create_new_user(params:new_user_data):
     try:
         credentials_return_json = params.dict()
         username=credentials_return_json["username"]
         password=credentials_return_json["password"]
-        response = ds.create_new_user(username,password)
+        return_window=credentials_return_json["returnWindow"]
+        response = ds.create_new_user(username,password,return_window)
         return response
+       
     except Exception as e:
         print('For some reason the exception is firing', e)
         raise HTTPException(status_code=500, detail=str(e))
