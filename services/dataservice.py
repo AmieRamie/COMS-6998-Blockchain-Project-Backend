@@ -117,6 +117,8 @@ class DataService:
             res={"success":success,"message":message}
             return res
         contract,success=self.create_seller_account_contract(network_address,return_window)
+        if not contract:
+            contract=""
         return {"success":success,"message":message+" Contract: "+contract}
     def verify_login(self,username,pwd):
         accounts = self.accounts_Dynamo_DB.account_exists(username)
