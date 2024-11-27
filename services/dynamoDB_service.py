@@ -388,6 +388,6 @@ class AccountsDynamoDB:
                     for item in items:
                         batch.delete_item(Key={'user_id': item['user_id']})
 
-            print("Accounts table cleared successfully.")
+            return "Accounts table cleared successfully."
         except ClientError as e:
-            print(f"Error clearing Accounts table: {e.response['Error']['Message']}")
+            return f"Error clearing Accounts table: {e.response['Error']['Message']}"

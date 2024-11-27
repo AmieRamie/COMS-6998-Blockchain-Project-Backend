@@ -42,11 +42,11 @@ def make_json_serializable(data):
 @app.get("/reset_tables")
 async def reset_tables():
     try:
-        ds.clear_tables()
+        message = ds.clear_tables()
         response = ds.restart_ganache()
         with open('data.json', 'w') as json_file:
             json.dump({}, json_file, indent=4)
-        return response
+        return {'ganache_response':response,'accounts_table_response':message}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
     
