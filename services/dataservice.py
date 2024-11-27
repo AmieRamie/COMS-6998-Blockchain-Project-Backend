@@ -135,7 +135,8 @@ class DataService:
     def clear_tables(self):
         self.seller_Dynamo_DB.clear_table()
         self.receipt_Dynamo_DB.clear_table()
-        self.accounts_Dynamo_DB.clear_table()
+        message = self.accounts_Dynamo_DB.clear_table()
+        return {"message":message}
     def restart_ganache(self,port=8545):
         try:
             find_and_kill_process(port)
