@@ -18,6 +18,7 @@ contract ReceiptManager {
     event ReceiptIssued(address indexed buyer, uint256 purchaseAmount, uint256 purchaseTime, uint256 receiptIndex);
     event RefundIssued(address indexed buyer, uint256 refundAmount);
     event FundsReleased(address indexed seller, uint256 amount, uint256 receiptIndex);
+    event DebugLog(string message, uint256 value); // New event for logging;
 
     constructor(uint256 _returnWindow) {
         seller = msg.sender;
@@ -54,6 +55,9 @@ contract ReceiptManager {
 
         // Access the specific receipt of the buyer (msg.sender)
         Receipt storage receipt = receipts[msg.sender][receiptIndex];
+
+        emit DebugLog("requestReturn called - Current block timestamp", block.timestamp);
+        emit DebugLog("Receipt expiration time", receipt.purchaseTime + returnWindow);
         
         require(block.timestamp <= receipt.purchaseTime + returnWindow, "Return window has closed");
         require(!receipt.refundIssued, "Refund already issued");
@@ -70,7 +74,11 @@ contract ReceiptManager {
 
         Receipt storage receipt = receipts[_buyer][receiptIndex];
         require(!receipt.refundIssued, "Refund already issued");
-        require(block.timestamp > receipt.purchaseTime + returnWindow, "Return window still open");
+
+        emit DebugLog("releaseFunds called - Current block timestamp", block.timestamp);
+        emit DebugLog("Receipt expiration time", receipt.purchaseTime + returnWindow);
+
+        require(block.timestamp >= receipt.purchaseTime + returnWindow, "Return window still open");
         require(!receipt.fundsReleased, "Funds already released"); // New check for funds release
 
         uint256 amountToRelease = receipt.purchaseAmount;

@@ -118,6 +118,7 @@ async def get_buyer_receipts(params:get_buyer_receipts_model):
 async def request_return(params:request_return_model):
     try:
         request_return_json = params.dict()
+        print(request_return_json)
         return_request_details, success, error_message = ds.request_return(request_return_json['transaction_hash'])
         print(return_request_details, success, error_message)
         if success:
@@ -132,6 +133,7 @@ async def request_return(params:request_return_model):
 async def release_funds(params:release_return_model):
     try:
         release_return_json = params.dict()
+        print(release_return_json)
         release_return_details, success, error_message = ds.funds_release(release_return_json['transaction_hash'])
         print(release_return_details, success, error_message)
         if success:
