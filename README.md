@@ -5,6 +5,23 @@ This repo includes the backend of the W6998 Receipt Management System. The syste
 
 Our frontend repo can be found [here](https://github.com/kevinshi-git/COMS-6998-Blockchain-Project/tree/main/blockchain).
 
+## Backend Design
+
+**Libraries and Frameworks**
+- Truffle + Ganache to develop and test the smart contract
+- Python (boto3) + FastAPI to interact with Ganache and build the API endpoints
+- DynamoDB to store seller, account, and receipt information
+
+**Smart Contract Functions** <br> 
+- ```issue_receipt```: Called by a seller for a specific buyer, SC issues the receipt and holds funds in escrow
+- ```request_return```: Buyer can request a return for a specific transaction within the return window. If return is valid, funds are sent back to buyer's account
+- ```release_funds```: Releases funds to the seller if the return window has expired.
+- ```getReceipt```: Retrieves details for specified receipt
+ 
+**Abstraction**
+- ```dataservice.py```: Python interface to DynamoDB tables
+- ```smart_contract_interactions.py```: Python interface to smart contract functions
+- ```main.py```: Fast API endpoints of above functions used by frontend
 ## Setup
 
 
