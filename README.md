@@ -10,17 +10,20 @@ Our frontend repo can be found [here](https://github.com/kevinshi-git/COMS-6998-
 **Libraries and Frameworks**
 - Truffle + Ganache to develop and test the smart contract
 - Python (boto3) + FastAPI to interact with Ganache and build the API endpoints
-- DynamoDB to store seller, account, and receipt information
+- DynamoDB to store buyer, seller, account, and receipt information in parallel to the smart contract to have faster access
 
 **Smart Contract Functions** <br> 
+Found under ```./contracts/ReceiptManager.sol```
 - ```issue_receipt```: Called by a seller for a specific buyer, SC issues the receipt and holds funds in escrow
 - ```request_return```: Buyer can request a return for a specific transaction within the return window. If return is valid, funds are sent back to buyer's account
 - ```release_funds```: Releases funds to the seller if the return window has expired.
 - ```getReceipt```: Retrieves details for specified receipt
  
 **Abstraction**
-- ```dataservice.py```: Python interface to DynamoDB tables
+Found under ```./services```
 - ```smart_contract_interactions.py```: Python interface to smart contract functions
+- ```dynamoDB_service.py```: Python interface to DynamoDB to be able to store user account, seller smart contract, and receipt info in a DynamoDB
+- ```dataservice.py```: Python interface to connect the smart contracts interface with the dynamoDB interface so both stay in sync with each other. Also provides additional business logic for the endpoints
 - ```main.py```: Fast API endpoints of above functions used by frontend
 ## Setup
 
