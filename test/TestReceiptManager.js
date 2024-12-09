@@ -148,6 +148,74 @@ contract('ReceiptManager', (accounts) => {
         }
     });
 
+    it('should prevent release of funds before return window expires', async () => {
+        const amount = web3.utils.toWei('0.1', 'ether');
+
+        // Issue a receipt
+        const result = await receiptManager.issueReceipt(buyer, {
+            from: seller,
+            value: amount,
+        });
+        const receiptIndex = result.logs[0].args.receiptIndex.toNumber();
+
+        try {
+            // Buyer tries to request a refund after the return window has passed
+            await receiptManager.releaseFunds(buyer, receiptIndex, { from: seller });
+            assert.fail(
+                'Funds should not be released until return window expires'
+            );   // should not reach here
+        } catch (error) {
+            assert(
+                error.message.includes('Return window still open'),
+                'Expected error for expired return window'
+            );
+        }
+    });
+
+    it('should allow the release of funds after return window expires', async () => {
+        const amount = web3.utils.toWei('0.1', 'ether');
+
+        // Issue a receipt
+        const result = await receiptManager.issueReceipt(buyer, {
+            from: seller,
+            value: amount,
+        });
+        const receiptIndex = result.logs[0].args.receiptIndex.toNumber();
+
+        // Wait for the return window to expire (30 days)
+        await time.increase(time.duration.days(31));
+
+        const sellerInitialBalance = await web3.eth.getBalance(seller);
+
+        const tx = await receiptManager.releaseFunds(buyer, receiptIndex, {
+            from: seller,
+        });
+
+        expectEvent(tx, 'FundsReleased', {
+            seller: seller,
+            amount: amount,
+            receiptIndex: receiptIndex.toString(),
+        });
+
+        const receiptAfterRelease = await receiptManager.getReceipt(
+            buyer,
+            receiptIndex
+        );
+        assert.equal(
+            receiptAfterRelease[3],
+            true,
+            'Funds should be marked as released'
+        );
+        const sellerBalanceAfterRelease = await web3.eth.getBalance(seller);
+        const balanceDifference = new BN(sellerBalanceAfterRelease).sub(new BN(sellerInitialBalance));
+
+        assert(
+            balanceDifference > amount * 0.8,
+            'Seller should have funds'
+        );
+
+    });
+
 
     
 });
