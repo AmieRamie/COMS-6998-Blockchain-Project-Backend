@@ -6,7 +6,7 @@ A decentralized application for secure receipt management and automated escrow s
 
 This project consists of two main components:
 - **Frontend**: React-based user interface ([Frontend Repository](https://github.com/kevinshi-git/COMS-6998-Blockchain-Project/tree/main/blockchain))
-- **Backend**: Smart contract and API server ([Backend Repository](https://github.com/AmieRamie/COMS-6998-Blockchain-Project-Backend/))
+- **Backend**: Smart contract and API server (This respository)
 
 ## Architecture
 
